@@ -167,7 +167,7 @@ func (ctl *Control) HandleNewProxyResp(inMsg *msg.NewProxyResp) {
 	// Start a new proxy handler if no error got
 	err := ctl.pm.StartProxy(inMsg.ProxyName, inMsg.RemoteAddr, inMsg.Error)
 	if err != nil {
-		xl.Warn("[%s] start error: %v", inMsg.ProxyName, err)
+		xl.Warn("[%s] 隧道启动错误: %v", inMsg.ProxyName, err)
 	} else {
 		xl.Info("[%s] 隧道启动成功", inMsg.ProxyName)
 	}
@@ -283,7 +283,7 @@ func (ctl *Control) msgHandler() {
 		select {
 		case <-hbSendCh:
 			// send heartbeat to server
-			xl.Debug("send heartbeat to server")
+			xl.Debug("发送心跳包到服务器")
 			pingMsg := &msg.Ping{}
 			if err := ctl.authSetter.SetPing(pingMsg); err != nil {
 				xl.Warn("error during ping authentication: %v", err)
@@ -292,7 +292,7 @@ func (ctl *Control) msgHandler() {
 			ctl.sendCh <- pingMsg
 		case <-hbCheckCh:
 			if time.Since(ctl.lastPong) > time.Duration(ctl.clientCfg.HeartbeatTimeout)*time.Second {
-				xl.Warn("heartbeat timeout")
+				xl.Warn("心跳包超时")
 				// let reader() stop
 				ctl.conn.Close()
 				return
@@ -314,7 +314,7 @@ func (ctl *Control) msgHandler() {
 					return
 				}
 				ctl.lastPong = time.Now()
-				xl.Debug("receive heartbeat from server")
+				xl.Debug("从服务器接收到心跳包")
 			}
 		}
 	}

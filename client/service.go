@@ -187,7 +187,7 @@ func (svr *Service) keepControllerWorking() {
 		// the first three retry with no delay
 		if reconnectCounts > 3 {
 			util.RandomSleep(reconnectDelay, 0.9, 1.1)
-			xl.Info("wait %v to reconnect", reconnectDelay)
+			xl.Info("等待 %v 重连", reconnectDelay)
 			reconnectDelay *= 2
 		} else {
 			util.RandomSleep(time.Second, 0, 0.5)
@@ -207,10 +207,10 @@ func (svr *Service) keepControllerWorking() {
 				return
 			}
 
-			xl.Info("try to reconnect to server...")
+			xl.Info("尝试重连服务器...")
 			conn, cm, err := svr.login()
 			if err != nil {
-				xl.Warn("reconnect to server error: %v, wait %v for another retry", err, delayTime)
+				xl.Warn("重连服务器错误: %v, 等待 %v 重试", err, delayTime)
 				util.RandomSleep(delayTime, 0.9, 1.1)
 
 				delayTime *= 2
@@ -295,7 +295,7 @@ func (svr *Service) login() (conn net.Conn, cm *ConnectionManager, err error) {
 	xl.AppendPrefix(svr.runID)
 
 	svr.serverUDPPort = loginRespMsg.ServerUDPPort
-	xl.Info("login to server success, get run id [%s], server udp port [%d]", loginRespMsg.RunID, loginRespMsg.ServerUDPPort)
+	xl.Info("登录到服务器成功, 获得运行 ID [%s], 服务器 UDP 端口为 [%d]", loginRespMsg.RunID, loginRespMsg.ServerUDPPort)
 	return
 }
 

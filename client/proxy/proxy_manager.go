@@ -125,7 +125,7 @@ func (pm *Manager) Reload(pxyCfgs map[string]config.ProxyConf) {
 		}
 	}
 	if len(delPxyNames) > 0 {
-		xl.Info("proxy removed: %v", delPxyNames)
+		xl.Info("隧道删除: %v", delPxyNames)
 	}
 
 	addPxyNames := make([]string, 0)
@@ -139,6 +139,6 @@ func (pm *Manager) Reload(pxyCfgs map[string]config.ProxyConf) {
 		}
 	}
 	if len(addPxyNames) > 0 {
-		xl.Info("proxy added: %v", addPxyNames)
+		xl.Info("隧道添加: %v", addPxyNames)
 	}
 }
