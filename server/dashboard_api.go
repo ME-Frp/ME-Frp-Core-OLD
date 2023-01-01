@@ -339,7 +339,7 @@ type CloseUserResp struct {
 	Msg    string `json:"message"`
 }
 
-func (svr *Service) ApiCloseClient(w http.ResponseWriter, r *http.Request) {
+func (svr *Service) APICloseClient(w http.ResponseWriter, r *http.Request) {
 	var (
 		buf  []byte
 		resp = CloseUserResp{}
