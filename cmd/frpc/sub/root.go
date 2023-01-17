@@ -46,8 +46,8 @@ var (
 	showVersion  bool
 	laetoken     string
 	tunnelid     string
-	fileContent  string
-	LocalContent string
+	RemoteContent string
+	LocalContent  string
 
 	serverAddr      string
 	user            string
@@ -233,28 +233,19 @@ func parseClientCommonCfgFromCmd() (cfg config.ClientCommonConf, err error) {
 	}
 	return
 }
-func GetLocal(cfgFile string) {
-	var b []byte
-	b, err := os.ReadFile(cfgFile)
-	if err != nil {
-		err = fmt.Errorf("使用本地配置文件错误 %v", err)
-		fmt.Println(err)
-		os.Exit(1)
-		return
-	}
-	content := string(b)
-	LocalContent = content
-	return
-}
+
 
 func runClient(cfgFilePath string, laetoken string, tunnelid string) error {
 	var content string
-	if cfgFile != "" {
-		GetLocal(cfgFile)
-		content = LocalContent
+	if cfgFilePath != "" {
+		LocalContent, err := config.GetRenderedConfFromFile(cfgFile)
+		if err != nil {
+			return err
+		}
+		content = string(LocalContent)
 	} else {
 		GetJson(laetoken, tunnelid)
-		content = fileContent
+		content = RemoteContent
 	}
 	cfg, pxyCfgs, visitorCfgs, err := config.ParseClientConfig(content)
 	if err != nil {
