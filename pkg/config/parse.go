@@ -22,14 +22,14 @@ import (
 	"path/filepath"
 )
 
-func ParseClientConfig(filePath string) (
+func ParseClientConfig(fileContent string) (
 	cfg ClientCommonConf,
 	pxyCfgs map[string]ProxyConf,
 	visitorCfgs map[string]VisitorConf,
 	err error,
 ) {
 	var content []byte
-	content = []byte(filePath)
+	content = []byte(fileContent)
 
 	configBuffer := bytes.NewBuffer(nil)
 	configBuffer.Write(content)
@@ -44,6 +44,16 @@ func ParseClientConfig(filePath string) (
 		err = fmt.Errorf("Parse config error: %v", err)
 		return
 	}
+	
+	// Aggregate proxy configs from include files.
+	var buf []byte
+	buf, err = getIncludeContents(cfg.IncludeConfigFiles)
+	if err != nil {
+		err = fmt.Errorf("getIncludeContents error: %v", err)
+		return
+	}
+	configBuffer.WriteString("\n")
+	configBuffer.Write(buf)
 
 	// Parse all proxy and visitor configs.
 	pxyCfgs, visitorCfgs, err = LoadAllProxyConfsFromIni(cfg.User, configBuffer.Bytes(), cfg.Start)
