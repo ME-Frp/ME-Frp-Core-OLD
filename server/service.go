@@ -22,6 +22,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"regexp"
 	"sort"
 	"strconv"
 	"time"
@@ -31,6 +32,7 @@ import (
 	quic "github.com/lucas-clemente/quic-go"
 
 	"github.com/fatedier/frp/assets"
+	"github.com/fatedier/frp/pkg/api"
 	"github.com/fatedier/frp/pkg/auth"
 	"github.com/fatedier/frp/pkg/config"
 	modelmetrics "github.com/fatedier/frp/pkg/metrics"
@@ -487,10 +489,11 @@ func (svr *Service) RegisterControl(ctlConn net.Conn, loginMsg *msg.Login) (err 
 	// If client's RunID is empty, it's a new client, we just create a new controller.
 	// Otherwise, we check if there is one controller has the same run id. If so, we release previous controller and start new one.
 	if loginMsg.RunID == "" {
-		loginMsg.RunID, err = util.RandID()
+		randid, err := util.RandID()
 		if err != nil {
-			return
+			return err
 		}
+		loginMsg.RunID = loginMsg.User + "-" + randid
 	}
 
 	ctx := frpNet.NewContextFromConn(ctlConn)
@@ -511,7 +514,46 @@ func (svr *Service) RegisterControl(ctlConn net.Conn, loginMsg *msg.Login) (err 
 		return
 	}
 
-	ctl := NewControl(ctx, svr.rc, svr.pxyManager, svr.pluginManager, svr.authVerifier, ctlConn, loginMsg, svr.cfg)
+	var (
+		inLimit  uint64
+		outLimit uint64
+	)
+
+	if svr.cfg.EnableApi {
+
+		nowTime := time.Now().Unix()
+
+		s, err := api.NewService(svr.cfg.ApiBaseUrl)
+		if err != nil {
+			return err
+		}
+
+		r := regexp.MustCompile(`^[A-Za-z0-9]{1,64}$`)
+		mm := r.FindAllStringSubmatch(loginMsg.User, -1)
+
+		if len(mm) < 1 {
+			return fmt.Errorf("invalid username")
+		}
+
+		// Connect to API server and verify the user.
+		valid, err := s.CheckToken(loginMsg.User, loginMsg.PrivilegeKey, nowTime, svr.cfg.ApiToken)
+
+		if err != nil {
+			return err
+		}
+
+		if !valid {
+			return fmt.Errorf("authorization failed")
+		}
+
+		inLimit, outLimit, err = s.GetProxyLimit(loginMsg.User, nowTime, svr.cfg.ApiToken)
+		if err != nil {
+			return err
+		}
+		xl.Debug("%s client speed limit: %dKB/s (Inbound) / %dKB/s (Outbound)", loginMsg.User, inLimit, outLimit)
+	}
+
+	ctl := NewControl(ctx, svr.rc, svr.pxyManager, svr.pluginManager, svr.authVerifier, ctlConn, loginMsg, svr.cfg, inLimit, outLimit)
 	if oldCtl := svr.ctlManager.Add(loginMsg.RunID, ctl); oldCtl != nil {
 		oldCtl.allShutdown.WaitDone()
 	}
@@ -566,9 +608,9 @@ func (svr *Service) RegisterVisitorConn(visitorConn net.Conn, newMsg *msg.NewVis
 	return svr.rc.VisitorManager.NewConn(newMsg.ProxyName, visitorConn, newMsg.Timestamp, newMsg.SignKey,
 		newMsg.UseEncryption, newMsg.UseCompression)
 }
+
 func (svr *Service) CloseUser(user string) error {
 	ctl, ok := svr.ctlManager.GetByID(user)
-	fmt.Print(ctl)
 	if !ok {
 		return fmt.Errorf("user not login")
 	}
