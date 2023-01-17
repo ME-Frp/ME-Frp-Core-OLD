@@ -15,7 +15,6 @@
 package sub
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -41,13 +40,13 @@ const (
 )
 
 var (
-	cfgFile      string
-	cfgDir       string
-	showVersion  bool
-	laetoken     string
-	tunnelid     string
-	fileContent  string
-	LocalContent string
+	cfgFile       string
+	cfgDir        string
+	showVersion   bool
+	usertoken     string
+	nodeid        string
+	RemoteContent string
+	LocalContent  string
 
 	serverAddr      string
 	user            string
@@ -84,8 +83,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file of frpc")
 	rootCmd.PersistentFlags().StringVarP(&cfgDir, "config_dir", "", "", "config directory, run one frpc service for each file in config directory")
 	rootCmd.PersistentFlags().BoolVarP(&showVersion, "version", "v", false, "version of frpc")
-	rootCmd.PersistentFlags().StringVarP(&laetoken, "laetoken", "t", "", "LaeCloud's API Token")
-	rootCmd.PersistentFlags().StringVarP(&tunnelid, "id", "i", "", "Tunnel's ID")
+	rootCmd.PersistentFlags().StringVarP(&usertoken, "token", "t", "", "You User Token")
+	rootCmd.PersistentFlags().StringVarP(&nodeid, "serverid", "n", "", "Node's ID")
 
 }
 
@@ -101,50 +100,36 @@ func RegisterCommonFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&tlsEnable, "tls_enable", "", false, "enable frpc tls")
 }
 
-func GetJson(laetoken string, tunnelid string) {
-	// 设置请求头
-	req, err := http.NewRequest("GET", "https://api.laecloud.com/api/modules/frp/hosts/"+tunnelid, nil)
+func GetConf(usertoken string, nodeid string) {
+	req, err := http.NewRequest("GET", "https://exxample.com/api/?action=getconf&apitoken=Token|"+nodeid+"&token="+usertoken+"&node="+nodeid, nil)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	req.Header.Set("Authorization", "Bearer "+laetoken)
 
-	// 创建 HTTP 客户端
 	client := &http.Client{}
 
-	// 发送 HTTP 请求并获取响应
 	response, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("请求到 LaeCloud API 错误 %d", response.StatusCode)
+		err = fmt.Errorf("XXXFrp API 错误 可能是您的启动信息错误%d", response.StatusCode)
 		fmt.Println(err)
 		os.Exit(1)
 		return
 	}
 	defer response.Body.Close()
 
-	// 读取响应体并将其转换为字符串
-	data, err := ioutil.ReadAll(response.Body)
+	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	jsonString := string(data)
-	var tunnelc tunnel
-	err1 := json.Unmarshal([]byte(jsonString), &tunnelc)
-	if err1 != nil {
-		fmt.Println(err1)
-		return
-	}
-
-	tunnelc.fullconf = tunnelc.Conf.Server + "\n" + "dns_server = 8.8.8.8" + "\n" + tunnelc.Conf.Client
-	fmt.Println("获取配置文件成功！ 开始启动隧道" + "\n")
-	var content string = tunnelc.fullconf
-	fileContent = content
+	fmt.Println("获取配置文件成功！ 启动隧道" + "\n")
+	Content := string(body)
+	RemoteContent = Content
 	return
 }
 
@@ -160,23 +145,23 @@ type Conf struct {
 
 var rootCmd = &cobra.Command{
 	Use:   "frpc",
-	Short: "This APP is MirrorEdge Frp's Modified Version",
+	Short: "This APP is xxx Frp",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if showVersion {
 			fmt.Println(version.Full())
 
 			return nil
 		}
-		fmt.Printf("欢迎使用 MirrorEdge Frp" + "\n")
+		fmt.Printf("欢迎使用 xxx Frp" + "\n")
 		// If cfgDir is not empty, run multiple frpc service for each config file in cfgDir.
 		// Note that it's only designed for testing. It's not guaranteed to be stable.
 
 		// Do not show command usage here.
-		if cfgFile == "" && (laetoken == "" || tunnelid == "") {
+		if cfgFile == "" && (usertoken == "" || nodeid == "") {
 			fmt.Println("启动参数不完整！ 使用 frpc -h 获取帮助")
 			return nil
 		}
-		err := runClient(cfgFile, laetoken, tunnelid)
+		err := runClient(cfgFile, usertoken, nodeid)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -253,8 +238,8 @@ func runClient(cfgFilePath string, laetoken string, tunnelid string) error {
 		GetLocal(cfgFile)
 		content = LocalContent
 	} else {
-		GetJson(laetoken, tunnelid)
-		content = fileContent
+		GetConf(usertoken, nodeid)
+		content = RemoteContent
 	}
 	cfg, pxyCfgs, visitorCfgs, err := config.ParseClientConfig(content)
 	if err != nil {

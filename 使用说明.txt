@@ -1,7 +1,0 @@
-1. 简单启动 
-"frpc -t "LaeCloudToken (需保留此处的引号)" -i 隧道 ID(控制面板获取)
-2. 官方启动
-将控制面板获取到的 配置文件 复制到 frpc.ini 中
-"frpc -c frpc.ini"
-
-更多高级使用教程请参见 https://docs.mefrp.com

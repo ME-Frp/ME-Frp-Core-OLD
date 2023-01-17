@@ -21,8 +21,8 @@ cd ./release
 
 for os in $os_all; do
     for arch in $arch_all; do
-        frp_dir_name="${frp_version}_${os}_${arch}"
-        frp_path="./packages/${frp_version}_${os}_${arch}"
+        frp_dir_name="frp_${frp_version}_${os}_${arch}"
+        frp_path="./packages/frp_${frp_version}_${os}_${arch}"
 
         if [ "x${os}" = x"windows" ]; then
             if [ ! -f "./frpc_${os}_${arch}.exe" ]; then
@@ -33,7 +33,7 @@ for os in $os_all; do
             fi
             mkdir ${frp_path}
             mv ./frpc_${os}_${arch}.exe ${frp_path}/frpc.exe
-            # mv ./frps_${os}_${arch}.exe ${frp_path}/frps.exe
+            mv ./frps_${os}_${arch}.exe ${frp_path}/frps.exe
         else
             if [ ! -f "./frpc_${os}_${arch}" ]; then
                 continue
@@ -43,11 +43,10 @@ for os in $os_all; do
             fi
             mkdir ${frp_path}
             mv ./frpc_${os}_${arch} ${frp_path}/frpc
-            # mv ./frps_${os}_${arch} ${frp_path}/frps
+            mv ./frps_${os}_${arch} ${frp_path}/frps
         fi  
-         cp ../使用说明.txt ${frp_path}
-        # cp -rf ../conf/* ${frp_path}
-        cp  ../conf/frpc.ini ${frp_path}
+        cp ../LICENSE ${frp_path}
+        cp -rf ../conf/* ${frp_path}
 
         # packages
         cd ./packages
