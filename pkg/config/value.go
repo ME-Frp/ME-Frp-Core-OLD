@@ -66,6 +66,8 @@ func GetRenderedConfFromFile(path string) (out []byte, err error) {
 	var b []byte
 	b, err = os.ReadFile(path)
 	if err != nil {
+		err = fmt.Errorf("使用本地配置文件错误 %v", err)
+		// os.Exit(1)
 		return
 	}
 
