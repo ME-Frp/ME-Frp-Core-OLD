@@ -144,7 +144,7 @@ func GetJson(laetoken string, tunnelid string) {
 	tunnelc.fullconf = tunnelc.Conf.Server + "\n" + "dns_server = 8.8.8.8" + "\n" + tunnelc.Conf.Client
 	fmt.Println("获取配置文件成功！ 开始启动隧道" + "\n")
 	var content string = tunnelc.fullconf
-	fileContent = content
+	RemoteContent = content
 	return
 }
 
