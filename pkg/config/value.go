@@ -16,10 +16,10 @@ package config
 
 import (
 	"bytes"
+        "fmt"
 	"os"
 	"strings"
 	"text/template"
-        "fmt"
 )
 
 var glbEnvs map[string]string
