@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 	"text/template"
+        "fmt"
 )
 
 var glbEnvs map[string]string
