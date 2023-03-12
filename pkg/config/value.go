@@ -16,7 +16,7 @@ package config
 
 import (
 	"bytes"
-        "fmt"
+	"fmt"
 	"os"
 	"strings"
 	"text/template"

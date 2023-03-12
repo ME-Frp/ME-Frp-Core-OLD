@@ -114,7 +114,7 @@ func (svr *Service) Run() error {
 	// set custom DNSServer
 	if svr.cfg.DNSServer != "" {
 		dnsAddr := svr.cfg.DNSServer
-if _, _, err := net.SplitHostPort(dnsAddr); err != nil {
+		if _, _, err := net.SplitHostPort(dnsAddr); err != nil {
 			dnsAddr = net.JoinHostPort(dnsAddr, "53")
 		}
 		// Change default dns server for frpc

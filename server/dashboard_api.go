@@ -359,5 +359,8 @@ func (svr *Service) ApiCloseClient(w http.ResponseWriter, r *http.Request) {
 		resp.Msg = "OK"
 	}
 	buf, _ = json.Marshal(&resp)
-	w.Write(buf)
+	_, err = w.Write(buf)
+	if err != nil {
+		// 处理错误
+	}
 }

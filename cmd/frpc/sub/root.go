@@ -41,11 +41,11 @@ const (
 )
 
 var (
-	cfgFile      string
-	cfgDir       string
-	showVersion  bool
-	laetoken     string
-	tunnelid     string
+	cfgFile       string
+	cfgDir        string
+	showVersion   bool
+	laetoken      string
+	tunnelid      string
 	RemoteContent string
 	LocalContent  string
 
@@ -86,7 +86,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&showVersion, "version", "v", false, "version of frpc")
 	rootCmd.PersistentFlags().StringVarP(&laetoken, "laetoken", "t", "", "LaeCloud's API Token")
 	rootCmd.PersistentFlags().StringVarP(&tunnelid, "id", "i", "", "Tunnel's ID")
-
 }
 
 func RegisterCommonFlags(cmd *cobra.Command) {
@@ -190,6 +189,7 @@ func Execute() {
 		os.Exit(1)
 	}
 }
+
 func handleSignal(svr *client.Service, doneCh chan struct{}) {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
@@ -233,7 +233,6 @@ func parseClientCommonCfgFromCmd() (cfg config.ClientCommonConf, err error) {
 	}
 	return
 }
-
 
 func runClient(cfgFilePath string, laetoken string, tunnelid string) error {
 	var content string

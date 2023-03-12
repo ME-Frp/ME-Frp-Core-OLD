@@ -566,6 +566,7 @@ func (svr *Service) RegisterVisitorConn(visitorConn net.Conn, newMsg *msg.NewVis
 	return svr.rc.VisitorManager.NewConn(newMsg.ProxyName, visitorConn, newMsg.Timestamp, newMsg.SignKey,
 		newMsg.UseEncryption, newMsg.UseCompression)
 }
+
 func (svr *Service) CloseUser(user string) error {
 	ctl, ok := svr.ctlManager.GetByID(user)
 	fmt.Print(ctl)

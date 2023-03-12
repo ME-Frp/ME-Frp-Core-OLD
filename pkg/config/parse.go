@@ -44,7 +44,6 @@ func ParseClientConfig(fileContent string) (
 		err = fmt.Errorf("Parse config error: %v", err)
 		return
 	}
-	
 	// Aggregate proxy configs from include files.
 	var buf []byte
 	buf, err = getIncludeContents(cfg.IncludeConfigFiles)
