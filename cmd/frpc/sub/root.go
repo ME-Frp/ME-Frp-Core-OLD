@@ -44,7 +44,7 @@ var (
 	cfgDir        string
 	showVersion   bool
 	usertoken     string
-	nodeid        string
+	tunnelid      string
 	RemoteContent string
 	LocalContent  string
 
@@ -84,7 +84,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgDir, "config_dir", "", "", "config directory, run one frpc service for each file in config directory")
 	rootCmd.PersistentFlags().BoolVarP(&showVersion, "version", "v", false, "version of frpc")
 	rootCmd.PersistentFlags().StringVarP(&usertoken, "token", "t", "", "You User Token")
-	rootCmd.PersistentFlags().StringVarP(&nodeid, "serverid", "n", "", "Node's ID")
+	rootCmd.PersistentFlags().StringVarP(&tunnelid, "tunnelid", "n", "", "Node's ID")
 
 }
 
@@ -100,35 +100,37 @@ func RegisterCommonFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&tlsEnable, "tls_enable", "", false, "enable frpc tls")
 }
 
-func GetConf(usertoken string, nodeid string) {
-	req, err := http.NewRequest("GET", "https://exxample.com/api/?action=getconf&apitoken=Token|"+nodeid+"&token="+usertoken+"&node="+nodeid, nil)
+func GetConf(token string, tunnelid string) {
+	req, err := http.NewRequest("GET", "https://api.frp.mcserverx.com/api/v2/tunnel/conf/id/"+tunnelid, nil)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	client := &http.Client{}
+	req.Header.Set("Authorization", "Bearer "+token)
 
-	response, err := client.Do(req)
+	c := &http.Client{}
+
+	response, err := c.Do(req)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("XXXFrp API 错误 可能是您的启动信息错误%d", response.StatusCode)
+		err = fmt.Errorf("ME Frp API 错误 可能是您的启动信息错误%d", response.StatusCode)
 		fmt.Println(err)
 		os.Exit(1)
 		return
 	}
 	defer response.Body.Close()
 
-	body, err := ioutil.ReadAll(response.Body)
+	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println("获取配置文件成功！ 启动隧道" + "\n")
-	Content := string(body)
+	Content := string(data)
 	RemoteContent = Content
 	return
 }
@@ -157,11 +159,11 @@ var rootCmd = &cobra.Command{
 		// Note that it's only designed for testing. It's not guaranteed to be stable.
 
 		// Do not show command usage here.
-		if cfgFile == "" && (usertoken == "" || nodeid == "") {
+		if cfgFile == "" && (usertoken == "" || tunnelid == "") {
 			fmt.Println("启动参数不完整！ 使用 frpc -h 获取帮助")
 			return nil
 		}
-		err := runClient(cfgFile, usertoken, nodeid)
+		err := runClient(cfgFile, usertoken, tunnelid)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -219,7 +221,7 @@ func parseClientCommonCfgFromCmd() (cfg config.ClientCommonConf, err error) {
 	return
 }
 
-func runClient(cfgFilePath string, laetoken string, tunnelid string) error {
+func runClient(cfgFilePath string, token string, tunnelid string) error {
 	var content string
 	if cfgFilePath != "" {
 		LocalContent, err := config.GetRenderedConfFromFile(cfgFile)
@@ -228,7 +230,7 @@ func runClient(cfgFilePath string, laetoken string, tunnelid string) error {
 		}
 		content = string(LocalContent)
 	} else {
-		GetConf(usertoken, nodeid)
+		GetConf(usertoken, tunnelid)
 		content = RemoteContent
 	}
 	cfg, pxyCfgs, visitorCfgs, err := config.ParseClientConfig(content)
